@@ -16,8 +16,13 @@ const app = createApp({
             axios.post(url, this.user)
             .then((res) => {
                 console.log(res.data);
+
+                // 取得 token, expired
                 const { token, expired } = res.data;
+                // 存至 cookie
                 document.cookie = `gillToken=${token}; expires=${new Date(expired)};`;
+
+                // 頁面跳轉
                 window.location = "products.html";
                 
             })

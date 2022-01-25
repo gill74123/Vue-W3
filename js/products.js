@@ -1,7 +1,9 @@
 import { createApp } from "https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.29/vue.esm-browser.min.js"
 
+
 // 宣告 Modal 變數(因為要讓 methods 吃到)
-let addProductModal = "";
+let productModal = "";
+let delProductModal = "";
 
 const app = createApp({
     data() {
@@ -9,7 +11,10 @@ const app = createApp({
             baseUrl: "https://vue3-course-api.hexschool.io/v2",
             apiPath: "gillchin",
             products: [],
-            newProduct: {},
+            isNew: true, // 判斷新增(true) modal or 編輯(false) modal
+            tempProduct: {
+                imagesUrl: []
+            },
         }
     },
     methods: {
@@ -27,6 +32,7 @@ const app = createApp({
                     console.log(err);
                     alert(err.response.data.message);
 
+                    // 頁面跳轉
                     // window.location = "login.html";
                 })
         },
@@ -44,18 +50,61 @@ const app = createApp({
                     console.log(err);
                 })
         },
-        // 開啟新增產品 modal
-        openAddProductModal() {
-            addProductModal.show();
+        // 開啟產品 modal (新增 & 編輯公用)
+        openProductModal(modalStatus, item) {            
+            // 判斷開啟的 modal 是新增還是編輯
+            if (modalStatus === 'new') {
+                // 新增 - 清空 tempProduct 物件
+                this.tempProduct = {
+                    imagesUrl: []
+                }
 
-            // 打開新增產品的 modal 時間建立多圖的陣列
-            this.newProduct.imageUrl = [];
+                // 新增頁面將 isNew 改成 true
+                this.isNew = true;
+
+                // 開啟 modal
+                productModal.show();
+            } else if (modalStatus === 'edit') {
+                // 編輯 - 將原有的產品資料展開
+                this.tempProduct = {...item};
+
+                // 新增頁面將 isNew 改成 false
+                this.isNew = false;
+
+                // 開啟 modal
+                productModal.show();
+            } else if (modalStatus === 'delete') {
+                // 刪除 - 將原有的產品資料展開
+                this.tempProduct = {...item};
+
+                // 開啟 modal
+                delProductModal.show();
+            }
         },
-        // 新增產品
-        addProduct() {
-            // 組成 API 要的資料格式
-            const addNewProduct = {data: {...this.newProduct}};
-            console.log(addNewProduct);
+        // 新增 & 編輯產品 (新增 & 編輯共用同個方法)
+        updateProduct(id) {
+            let url = `${this.baseUrl}/api/${this.apiPath}/admin/product`;
+            let httpMethod = "post";
+
+            // 若是編輯就修改 url & httpMethod
+            if (!this.isNew) {
+                url = `${this.baseUrl}/api/${this.apiPath}/admin/product/${id}`;
+                httpMethod = "put";
+            }
+
+            axios[httpMethod](url, {data: this.tempProduct})
+            .then((res) => {
+                console.log(res);
+
+                // 關閉 modal
+                productModal.hide();
+
+                // 執行 取得產品資料
+                this.getData();
+            })
+            .catch((err) => {
+                console.dir(err);
+            })
         },
         // 刪除產品
         deleteProduct(id) {
@@ -63,7 +112,9 @@ const app = createApp({
             axios.delete(url)
             .then((res) => {
                 console.log(res);
-                alert(res.data.message);
+
+                // 關閉 modal
+                delProductModal.hide();
                 
                 // 執行 取得產品資料
                 this.getData();
@@ -81,9 +132,11 @@ const app = createApp({
         // 執行 判斷是否登入
         this.checkAdmin();
 
-        // 在生命週期時指向 DOM 元素
-        const productModal = document.querySelector("#productModal");
-        addProductModal = new bootstrap.Modal(productModal);
+        // 使用 new 建立 bootstrap modal，拿到實體 DOM 並賦予到變數上
+        // 新增 & 編輯的 modal
+        productModal = new bootstrap.Modal(document.querySelector("#productModal"), {keyboard: false});
+        // 刪除的 modal
+        delProductModal = new bootstrap.Modal(document.querySelector("#delProductModal"), {keyboard: false});
     },
 })
 
