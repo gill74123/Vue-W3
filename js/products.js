@@ -35,7 +35,7 @@ const app = createApp({
                     alert(err.response.data.message);
 
                     // 頁面跳轉
-                    // window.location = "login.html";
+                    window.location = "login.html";
                 })
         },
         // 取得產品資料
@@ -158,7 +158,7 @@ const app = createApp({
                 logoutModal.hide();
 
                 // 頁面跳轉
-                // window.location = "./login.html";
+                window.location = "./login.html";
             })
             .catch((err) => {
                 console.log(err);
